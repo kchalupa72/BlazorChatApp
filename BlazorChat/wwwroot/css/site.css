@@ -112,3 +112,26 @@ textarea {
 .msg {
     /*display: inline;*/
 }
+
+.crypto-row-up {
+    background-color: #4dff4d;
+}
+
+.crypto-row-down {
+    background-color: #ff4d4d;
+}
+
+.crypto-tracker-table {
+    width: 90%;
+    margin-bottom: 1rem;
+    color: #212529;
+    margin: auto;
+}
+
+
+.crypto-tracker-heading {
+    text-align-last: center;
+    align-content: center;
+    margin: 1rem;
+}
+

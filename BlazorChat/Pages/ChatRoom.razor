@@ -1,12 +1,13 @@
 ﻿@page "/chatroom"
 @inject NavigationManager navigationManager
-@using Microsoft.AspNetCore.SignalR.Client;
+@using Microsoft.AspNetCore.SignalR.Client
 
 <h1>Blazor SignalR Chat Sample</h1>
 <hr />
 
 @if (!_isChatting)
 {
+    <audio autoplay controls hidden="hidden"><source src="Audio/yougotmail.mp3" /></audio>
     <p>
         Enter your name to start chatting:
     </p>

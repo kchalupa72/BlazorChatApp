@@ -1,4 +1,11 @@
 using BlazorChat.Data;
+using BlazorChat.Repos;
+using BlazorChat.Services;
+using BlazorChat.SignalRServer;
+using Blazored.SessionStorage;
+using Blazorise;
+using Blazorise.Bootstrap;
+using Blazorise.Icons.FontAwesome;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
@@ -23,7 +30,20 @@ namespace BlazorChat
         {
             services.AddRazorPages();
             services.AddServerSideBlazor();
+            services.AddBlazoredSessionStorage();
             services.AddSingleton<WeatherForecastService>();
+            services.AddSingleton<CryptoDataRepo>();
+            services.AddSingleton<CryptoDataService>();
+            services.AddSingleton<ICryptoGenerator, CryptoGenerator>();
+            services.AddSingleton<CryptoState>();
+            services.AddScoped<ChatState>().AddScoped<ISessionStorageService, SessionStorageService>();
+            services.AddHostedService<CryptoBackgroundWorker>();
+            services.AddBlazorise(options =>
+                   {
+                       options.ChangeTextOnKeyPress = true; // optional
+                   })
+                    .AddBootstrapProviders()
+                    .AddFontAwesomeIcons();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -50,7 +70,12 @@ namespace BlazorChat
                 endpoints.MapBlazorHub();
                 endpoints.MapFallbackToPage("/_Host");
                 endpoints.MapHub<BlazorChatSampleHub>(BlazorChatSampleHub.HubUrl);
+                endpoints.MapHub<CryptoHub>(CryptoHub.HubUrl);
             });
+
+            app.ApplicationServices
+              .UseBootstrapProviders()
+              .UseFontAwesomeIcons();
         }
     }
 }

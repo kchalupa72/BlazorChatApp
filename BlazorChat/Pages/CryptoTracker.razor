@@ -1,0 +1,118 @@
+﻿@page "/CryptoTracker"
+@using BlazorChat.Data
+@using Microsoft.AspNetCore.SignalR.Client
+@inject NavigationManager navigationManager
+@inject CryptoState cryptoState
+
+<Heading Size="HeadingSize.Is2" class="crypto-tracker-heading">Crypto-Coin Tracker</Heading>
+
+<Table>
+    <TableHeader ThemeContrast="ThemeContrast.Dark" class="crypto-tracker-table">
+        <TableRow>
+            <TableHeaderCell/>
+            <TableHeaderCell>Symbol</TableHeaderCell>
+            <TableHeaderCell style="text-align: center;">Price</TableHeaderCell>
+            <TableHeaderCell style="text-align: center;">Change (D)</TableHeaderCell>
+            <TableHeaderCell style="text-align: center;">Volume</TableHeaderCell>
+        </TableRow>
+    </TableHeader>
+    <TableBody>
+        @foreach (var CryptoData in Quotes.OrderByDescending(e => e.Price))
+        {
+            if (CryptoData.PriceRise)
+            {
+                rowClass = "crypto-row-up";
+            }
+            else
+            {
+                rowClass = "crypto-row-down";
+            }
+            <TableRow Class="@rowClass">
+                <TableRowCell><img src="@GetImageSource(CryptoData.Symbol)" alt="CryptoCoinPhoto" /></TableRowCell>
+                <TableRowHeader>
+                    @CryptoData.Symbol
+                </TableRowHeader>
+                <TableRowCell style="text-align: center">@CryptoData.Price.ToString("C2")</TableRowCell>
+                <TableRowCell style="text-align: center">@CryptoData.Percent.ToString("F1")%</TableRowCell>
+                <TableRowCell style="text-align: center">@CryptoData.Volume</TableRowCell>
+            </TableRow>
+        }
+    </TableBody>
+</Table>
+
+
+@code {
+
+    public List<CryptoData> Quotes = new List<CryptoData>();
+
+    public string rowClass = "crypto-row-up";
+
+    private string HubUrl;
+    private HubConnection HubConnection;
+
+    protected override async Task OnInitializedAsync()
+    {
+
+        //if (cryptoState != null) 
+        //{
+        //    Quotes = cryptoState.CryptoDataSet;
+        //}
+
+        // Create the chat client
+        string baseUrl = navigationManager.BaseUri;
+
+        HubUrl = baseUrl.TrimEnd('/') + CryptoHub.HubUrl;
+
+        HubConnection = new HubConnectionBuilder()
+            .WithUrl(HubUrl)
+            .Build();
+
+        HubConnection.On<CryptoData>("SendCryptoDataToClients", (quote) =>
+        {
+            var index = Quotes.FindIndex(q => q.Symbol == quote.Symbol);
+
+            if (index < 0)
+            {
+                Quotes.Add(quote);
+                StateHasChanged();
+            }
+            else
+            {
+                this.Quotes[index].UpdateQuoteData(quote);
+                StateHasChanged();
+            }
+
+        });
+
+        await HubConnection.StartAsync();
+
+    }
+
+    public string GetImageSource(string symbol)
+    {
+        var imageSource = "Images/";
+
+        if (symbol.Equals("D"))
+        {
+            imageSource += "DogeCoin_Snipped_Square.jpg";
+        }
+        else if (symbol.Equals("LTC"))
+        {
+
+            imageSource += "LiteCoin_Image.jpg";
+        }
+        else if (symbol.Equals("BTC"))
+        {
+            imageSource += "Bitcoin_Image.jpg";
+        }
+
+        return imageSource;
+    }
+
+    public void Dispose()
+    {
+        //close the connection
+        this.HubConnection.StopAsync();
+    }
+
+}
